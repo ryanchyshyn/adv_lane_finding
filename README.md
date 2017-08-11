@@ -2,20 +2,12 @@
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
 
-In this project, your goal is to write a software pipeline to identify the lane boundaries in a video, but the main output or product we want you to create is a detailed writeup of the project.  Check out the [writeup template](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup.  
-
-Creating a great writeup:
----
-A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
-
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
+This project goal is to write a software pipeline to identify the lane boundaries in a video. This document will describe the algorithm in details.
 
 The Project
 ---
 
-The goals / steps of this project are the following:
+The key steps of this project are the following:
 
 * Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
 * Apply a distortion correction to raw images.
@@ -26,10 +18,84 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-The images for camera calibration are stored in the folder called `camera_cal`.  The images in `test_images` are for testing your pipeline on single frames.  If you want to extract more test images from the videos, you can simply use an image writing method like `cv2.imwrite()`, i.e., you can read the video in frame by frame as usual, and for frames you want to save for later you can write to an image file.  
+[//]: # (Image References)
 
-To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `ouput_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+[image1]: ./camera_cal/calibration2.jpg "Camera calibration"
+[image2]: ./output_images/image1.png "image"
+[image3]: ./output_images/image2.png "image"
+[image4]: ./output_images/image3.png "image"
+[image5]: ./output_images/image4.png "image"
+[image6]: ./output_images/image5.png "image"
+[image7]: ./output_images/image6.png "image"
+[image8]: ./output_images/image7.png "image"
+[image9]: ./output_images/image8.png "image"
+[image10]: ./output_images/image9.png "image"
+[image11]: ./output_images/image10.png "image"
+[video1]: ./project_video.mp4 "Video"
 
-The `challenge_video.mp4` video is an extra (and optional) challenge for you if you want to test your pipeline under somewhat trickier conditions.  The `harder_challenge.mp4` video is another optional challenge and is brutal!
+### Camera Calibration
 
-If you're feeling ambitious (again, totally optional though), don't stop there!  We encourage you to go out and take video of your own, calibrate your camera and show us how you would implement this project from scratch!
+I performed camera calibration using the single image ![image][image1] and got camera calibration matrix:
+```
+Camera calibration matrix: [[ 872.5223319     0.          649.38554509]
+ [   0.          853.10470045  213.74930061]
+ [   0.            0.            1.        ]]
+ ```
+ Original images: ![image][image2]
+ Undistorted images: ![image][image3]
+ 
+ The difference is not so big but it can be noticable further if not performed right now.
+ 
+ ### Perspective
+ 
+ To get perspective matrix I performed the following calculations:
+ ```
+     srcPoints = np.float32(
+        [[w * 0.18, h * 0.95],
+         [w * 0.457, h * 0.63],
+         [w * 0.543, h * 0.63],
+         [w * 0.82, h * 0.95]])
+    dstPoints = np.float32(
+        [[w * 0.25, h],
+         [w * 0.25, 0],
+         [w * 0.75, 0],
+         [w * 0.75, h]])
+    
+    M = cv2.getPerspectiveTransform(srcPoints, dstPoints)
+    Minv = cv2.getPerspectiveTransform(dstPoints, srcPoints)
+```
+
+and checked the result using *straight* image: ![image][image4]
+vertical lines on the first image shows that perspective matrix is correct.
+
+### Pipeline
+Next steps are performed for every frame in the video.
+
+## Warping
+Warping is performed using M matrix. The result is displayed on previous image.
+
+## Binarization
+After many experiments I found the following binarization algorithm is the best:
+1. Convert image to HLS color space
+2. Get L and S channels: ![image][image5]
+3. Adjust gamma on L channel: ![image][image6]
+4. Sum *gamma(L)* with *S* images using Max function (i.e. get the brightest pixel from two): ![image][image7]
+5. Do binary thresholding using values min=110, max=255: ![image][image8]
+![image][image9]
+
+## Lines detection
+Perform lines detection using provided in the lesson algorithm: ![image][image10]
+
+## Draw lane highlighting
+Draw the polygon on warped clear image
+
+## Unwarp the image
+Unwarp the image using inverted M matrix
+
+## Combine original and highliting image
+
+## Draw text on the image
+The final image: ![image][image11]
+
+### The final video
+![video][video1]
