@@ -31,7 +31,7 @@ The key steps of this project are the following:
 [image9]: ./output_images/image8.png "image"
 [image10]: ./output_images/image9.png "image"
 [image11]: ./output_images/image10.png "image"
-[video1]: ./project_video.mp4 "Video"
+[video1]: ./out.mp4 "Video"
 
 ### Camera Calibration
 
